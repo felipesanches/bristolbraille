@@ -20,7 +20,7 @@ def setup_serial():
     exit(1)
   return serial_port
 
-def send_robot_commands(code):
+def send_robot_commands(codes):
   response = ""
   for line in codes:
     if not line == None:
@@ -43,7 +43,8 @@ def read_serial_response():
       print "<- %s" % response,
     all_lines += response
   return all_lines
-if __name__ == '__main__':
+
+def get_args():
     parser = argparse.ArgumentParser(description="write to arduino")
 
     parser.add_argument('--command', action='store', dest='command', help="command to send")
@@ -57,11 +58,14 @@ if __name__ == '__main__':
         action='store_const', const=True, dest='verbose', default=False,
         help="verbose")
     parser.add_argument('--serial-timeout',
-        action='store', dest='timeout', type=int, default=1,
+        action='store', dest='timeout', type=int, default=10,
         help="timeout on serial read")
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
+if __name__ == '__main__':
+
+    args = get_args()
 
     if args.command:
         codes=[args.command+"\n"]
