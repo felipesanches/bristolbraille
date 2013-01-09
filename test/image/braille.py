@@ -2,22 +2,25 @@
 import time
 import os
 import pickle
-import cv
+import cv, cv2
 import argparse
 
 class Target:
 
+
     def __init__(self):
         self.match={}
+        self.first_frame_name = "firstframe.png"
+        self.statefile = 'match_data.pkl'
         self.threshold=150
         try:
-          pkl_file = open('match_data.pkl', 'rb')
+          pkl_file = open(self.statefile, 'rb')
           self.match = pickle.load(pkl_file)
           self.matching = True; 
         except:
           self.matching = False; 
 
-        self.capture = cv.CaptureFromCAM(0)
+        self.capture = cv2.VideoCapture(0) #.CaptureFromCAM(0)
         self.window_names = {
           "first" : "first frame",
           "live" : "live",
@@ -29,7 +32,11 @@ class Target:
         cv.CreateTrackbar("thresh", self.window_names["first"], 0, 255, self.update_threshold)
         cv.SetMouseCallback(self.window_names["difference"], self.diff_mouse)
 #        cv.SetMouseCallback(self.window_names["live"], self.live_mouse)
-        self.first_frame = cv.LoadImageM("firstframe.png", cv.CV_LOAD_IMAGE_GRAYSCALE)
+        try:
+          self.first_frame = cv.LoadImageM(self.first_frame_name, cv.CV_LOAD_IMAGE_GRAYSCALE)
+        except IOError:
+          print "no first frame found, taking new pic"
+          self.get_first_frame()
 
     def update_threshold(self,threshold):
       self.threshold=threshold
@@ -39,7 +46,9 @@ class Target:
         #get first frame
         print "getting first frame"
 #        cv.SetCaptureProperty(self.capture, cv.CV_CAP_PROP_EXPOSURE, 5000);
-        frame = cv.QueryFrame(self.capture)
+        flag, im_array = self.capture.read()
+        frame = cv.fromarray(im_array)
+        #frame = cv.QueryFrame(self.capture)
         frame_size = cv.GetSize(frame)
         #make the grey scale
         first_frame = cv.CreateImage(frame_size, cv.IPL_DEPTH_8U, 1)
@@ -49,7 +58,7 @@ class Target:
         cv.Smooth(first_frame, first_frame, cv.CV_GAUSSIAN, 3, 0)
         self.first_frame = first_frame
         #save it
-        cv.SaveImage("firstframe.png", t.first_frame)
+        cv.SaveImage(self.first_frame_name, first_frame)
 
     def diff_mouse(self,event, x, y, flags,user_data):
      # print cv.Get2D(self.difference, y, x)
@@ -73,13 +82,18 @@ class Target:
           dot = (first_dot[0]+dot_num*2*self.match["dot_width"],first_dot[1])
           self.match["dots"].append(dot)
         print self.match
-        output = open('match_data.pkl', 'wb')
+        output = open(self.statefile, 'wb')
         # Pickle dictionary using protocol 0.
         pickle.dump(self.match, output)
         output.close()
 
     def run(self):
-          frame = cv.QueryFrame(self.capture)
+          #frame = cv.QueryFrame(self.capture)
+          flag, im_array = self.capture.read()
+          frame = cv.fromarray(im_array)
+          if frame == None:
+            print "no frame"
+            return
           grey_frame = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 1)
           cv.CvtColor(frame, grey_frame, cv.CV_RGB2GRAY)
           cv.Threshold(grey_frame, grey_frame, self.threshold, 255, cv.CV_THRESH_BINARY)
@@ -125,8 +139,12 @@ class Target:
               #print "%3.0f" % ( dot_value[dot_num] ) #'1' if dot_value[dot_num] > 100 else '0' ),
               dot_num += 1
             
+            self.dot_match = []
             for dot in dot_value:
-                print "%s" % ( '1' if dot > 100 else '0' ),
+                dot_match =  True if dot > 100 else False
+                self.dot_match.append(dot_match)
+                print dot_match,
+
             print "" 
 
           #show images
@@ -136,9 +154,12 @@ class Target:
 
           c = cv.WaitKey(10)
 
-def advance(steps=0):
-  print steps
-  os.system("./feed.py --command f%d" % steps )
+    def finish_cv(self):
+      cv.DestroyAllWindows()
+      self.capture.release()
+
+
+
 
 if __name__=="__main__":
   argparser = argparse.ArgumentParser()
@@ -150,9 +171,6 @@ if __name__=="__main__":
   group.add_argument('--single',
       action='store_const', const=True, dest='single', default=False,
       help="take one shot")
-  group.add_argument('--rotor',
-      action='store_const', const=True, dest='rotor', default=False,
-      help="take one shot of each side of the rotor")
       
   args = argparser.parse_args()
 
@@ -164,22 +182,5 @@ if __name__=="__main__":
   if args.single:
     t.run()
 
-  if args.rotor:
-    pos = []
-    for i in range(8):
-      pos.append( int(i*12.5) )
-  
-    last_pos=0
-    for p in pos:
-      print "advance..."
-      advance(p-last_pos)
-      last_pos = p
-      t.matching=False
-      for i in range(5):
-        t.run()
-      t.matching=True
-      t.run()
-    
-    os.system("./feed.py --command f-%d" % (int(12.5*7)) )
-    
+  t.finish_cv()
 
