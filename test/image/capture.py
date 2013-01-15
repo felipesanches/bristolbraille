@@ -11,6 +11,7 @@ class Target:
     def __init__(self):
         self.match={}
         self.first_frame_name = "firstframe.png"
+        self.font = cv.InitFont(cv.CV_FONT_HERSHEY_SIMPLEX, 0.5, 1, 0, 2, 8)
         self.statefile = 'match_data.pkl'
         self.threshold=150
         try:
@@ -31,9 +32,10 @@ class Target:
 #        cv.NamedWindow(self.window_names["live"])
         cv.CreateTrackbar("thresh", self.window_names["first"], 0, 255, self.update_threshold)
         cv.SetMouseCallback(self.window_names["difference"], self.diff_mouse)
+        cv.SetMouseCallback(self.window_names["first"], self.first_mouse)
 #        cv.SetMouseCallback(self.window_names["live"], self.live_mouse)
         try:
-          self.first_frame = cv.LoadImageM(self.first_frame_name, cv.CV_LOAD_IMAGE_GRAYSCALE)
+          self.first_frame = cv.LoadImageM(self.first_frame_name) #, cv.CV_LOAD_IMAGE_GRAYSCALE)
         except IOError:
           print "no first frame found, taking new pic"
           self.get_first_frame()
@@ -42,24 +44,33 @@ class Target:
       self.threshold=threshold
       self.get_first_frame()
 
+    def update_colour(self,colour):
+      self.colour=colour
+    
     def get_first_frame(self):
         #get first frame
         print "getting first frame"
-#        cv.SetCaptureProperty(self.capture, cv.CV_CAP_PROP_EXPOSURE, 5000);
+
         flag, im_array = self.capture.read()
         frame = cv.fromarray(im_array)
-        #frame = cv.QueryFrame(self.capture)
         frame_size = cv.GetSize(frame)
-        #make the grey scale
-        first_frame = cv.CreateImage(frame_size, cv.IPL_DEPTH_8U, 1)
-        cv.CvtColor(frame, first_frame, cv.CV_RGB2GRAY)
-        # Convert the image to black and white.
-        cv.Threshold(first_frame, first_frame, self.threshold, 255, cv.CV_THRESH_BINARY)
+        first_frame = cv.CreateImage(frame_size, cv.IPL_DEPTH_8U, 3)
+        #convert colour space, src, dst
+        cv.CvtColor(frame, first_frame, cv.CV_BGR2HSV)
         cv.Smooth(first_frame, first_frame, cv.CV_GAUSSIAN, 3, 0)
+
+
         self.first_frame = first_frame
         #save it
         cv.SaveImage(self.first_frame_name, first_frame)
 
+    def first_mouse(self,event, x, y, flags,user_data):
+      if event == cv.CV_EVENT_LBUTTONDOWN:
+        s = cv.Get2D(self.first_frame,y,x) #colour of circle
+        self.match["hue"] = s[0]
+
+        #print "B: %f G: %f R: %f\n" % (s[0],s[1],s[2])
+        
     def diff_mouse(self,event, x, y, flags,user_data):
      # print cv.Get2D(self.difference, y, x)
       if event == cv.CV_EVENT_LBUTTONDOWN:
@@ -94,42 +105,23 @@ class Target:
           if frame == None:
             print "no frame"
             return
-          grey_frame = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 1)
-          cv.CvtColor(frame, grey_frame, cv.CV_RGB2GRAY)
-          cv.Threshold(grey_frame, grey_frame, self.threshold, 255, cv.CV_THRESH_BINARY)
-          cv.Smooth(grey_frame, grey_frame, cv.CV_GAUSSIAN, 3, 0)
+          hsv_frame = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 3)
+          cv.CvtColor(frame, hsv_frame, cv.CV_BGR2HSV)
+          #cv.Threshold(grey_frame, grey_frame, self.threshold, 255, cv.CV_THRESH_BINARY)
+          cv.Smooth(hsv_frame, hsv_frame, cv.CV_GAUSSIAN, 3, 0)
           
-          difference = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 1)
-          cv.AbsDiff(grey_frame, self.first_frame, difference)
-          self.difference = difference
+         # difference = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 3)
+         # cv.AbsDiff(hsv_frame, self.first_frame, difference)
+         # self.difference = difference
+
           if self.matching:
-            """
-            storage = cv.CreateMemStorage(0)
-  #          cv.ConvertScale(contour_frame, contour_frame, 1.0, 0.0)
-            #this seems to destroy the difference frame
-            contours = cv.FindContours(contour_frame, storage, cv.CV_RETR_CCOMP, cv.CV_CHAIN_APPROX_SIMPLE)
-            #cv.DrawContours(img=frame, contour=contours, external_color=cv.RGB(255, 0, 0), hole_color=cv.RGB(0, 255, 0), max_level=1 )
-            points = []
-            while contours:
-                bound_rect = cv.BoundingRect(list(contours))
-                contours = contours.h_next()
-
-                pt1 = (bound_rect[0], bound_rect[1])
-                pt2 = (bound_rect[0] + bound_rect[2], bound_rect[1] + bound_rect[3])
-                x = bound_rect[0]+bound_rect[2]/2
-                y = bound_rect[1]+bound_rect[3]/2
-                cv.Circle(frame, (x,y), self.dot_width/4, cv.CV_RGB(0, 255, 255), 2)
-                points.append((x,y))
-                cv.Rectangle(frame, pt1, pt2, cv.CV_RGB(255,0,0), 1)
-
-            """
             dot_num = 0
             dot_value=[]
-            temp = cv.CloneImage(difference)
+            temp = cv.CloneImage(hsv_frame)
             for dot in self.match["dots"]:
               src_region = cv.GetSubRect(temp, (dot[0], dot[1], self.match["dot_width"], self.match["dot_height"]) )
               dot_value.append(cv.Avg(src_region)[0])
-              cv.Rectangle(difference, dot,(dot[0]+self.match["dot_width"],dot[1]+self.match["dot_height"]), cv.CV_RGB(255, 0, 255), 2, 7)
+              cv.Rectangle(hsv_frame, dot,(dot[0]+self.match["dot_width"],dot[1]+self.match["dot_height"]), cv.CV_RGB(255, 0, 255), 2, 7)
               #print "dot %d avg %3.1f" % (dot_num, cv.Avg(src_region)[0])
               """
               for point in points:
@@ -140,17 +132,20 @@ class Target:
               dot_num += 1
             
             self.dot_match = []
+            match_str = ""
             for dot in dot_value:
-                dot_match =  True if dot > 100 else False
+                dot_match =  True if abs(dot-self.match["hue"]) < 5 else False
                 self.dot_match.append(dot_match)
-                print dot_match,
+                match_str += "True" if dot_match else "False"
 
-            print "" 
-
+            print match_str
           #show images
+            cv.PutText(hsv_frame,"%d" % self.match["hue"],(10,20),self.font, (255,255,255))
+            cv.PutText(hsv_frame,"%s" % match_str,(10,40),self.font, (255,255,255))
+            cv.PutText(hsv_frame,"%d %d %d" % (dot_value[0],dot_value[1],dot_value[2]),(10,60),self.font, (255,255,255))
           cv.ShowImage(self.window_names["first"], self.first_frame)
 #          cv.ShowImage(self.window_names["live"], frame)
-          cv.ShowImage(self.window_names["difference"], difference)
+          cv.ShowImage(self.window_names["difference"], hsv_frame)
 
           c = cv.WaitKey(10)
 
