@@ -31,9 +31,10 @@ class Target:
         cv.NamedWindow(self.window_names["first"])
         cv.NamedWindow(self.window_names["difference"])
 #        cv.NamedWindow(self.window_names["live"])
-        cv.CreateTrackbar("thresh", self.window_names["first"], self.match["threshold"], 50, self.update_threshold)
+        cv.CreateTrackbar("thresh", self.window_names["difference"], self.match["threshold"], 50, self.update_threshold)
+        cv.CreateTrackbar("hue", self.window_names["difference"], self.match["hue"], 255, self.update_hue)
         cv.SetMouseCallback(self.window_names["difference"], self.diff_mouse)
-        cv.SetMouseCallback(self.window_names["first"], self.first_mouse)
+      #  cv.SetMouseCallback(self.window_names["first"], self.first_mouse)
 #        cv.SetMouseCallback(self.window_names["live"], self.live_mouse)
         try:
           self.first_frame = cv.LoadImageM(self.first_frame_name) #, cv.CV_LOAD_IMAGE_GRAYSCALE)
@@ -43,10 +44,10 @@ class Target:
 
     def update_threshold(self,threshold):
       self.match["threshold"]=threshold
-      self.get_first_frame()
+#      self.get_first_frame()
 
-    def update_colour(self,colour):
-      self.colour=colour
+    def update_hue(self,hue):
+      self.match["hue"]=hue
     
     def get_first_frame(self):
         #get first frame
@@ -73,7 +74,10 @@ class Target:
         #print "B: %f G: %f R: %f\n" % (s[0],s[1],s[2])
         
     def diff_mouse(self,event, x, y, flags,user_data):
-     # print cv.Get2D(self.difference, y, x)
+      if event == cv.CV_EVENT_RBUTTONDOWN:
+        s = cv.Get2D(self.hsv_frame,y,x) #colour of circle
+        self.match["hue"] = s[0]
+        cv.SetTrackbarPos("hue", self.window_names["difference"], self.match["hue"])
       if event == cv.CV_EVENT_LBUTTONDOWN:
         self.match["top_corner"] = (x,y)
       if event == cv.CV_EVENT_LBUTTONUP:
@@ -111,7 +115,8 @@ class Target:
           hsv_frame = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 3)
           cv.CvtColor(frame, hsv_frame, cv.CV_BGR2HSV)
           #cv.Threshold(grey_frame, grey_frame, self.threshold, 255, cv.CV_THRESH_BINARY)
-#          cv.Smooth(hsv_frame, hsv_frame, cv.CV_GAUSSIAN, 3, 0)
+          cv.Smooth(hsv_frame, hsv_frame, cv.CV_GAUSSIAN, 3, 0)
+          self.hsv_frame = hsv_frame
           
          # difference = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 3)
          # cv.AbsDiff(hsv_frame, self.first_frame, difference)
@@ -139,7 +144,7 @@ class Target:
             for dot in dot_value:
                 dot_match =  True if abs(dot-self.match["hue"]) < self.match["threshold"] else False
                 self.dot_match.append(dot_match)
-                match_str += "True " if dot_match else "False "
+                match_str += "True  " if dot_match else "False "
 
             if args.single:
               print match_str
@@ -147,7 +152,7 @@ class Target:
             cv.PutText(hsv_frame,"%d" % self.match["hue"],(10,20),self.font, (255,255,255))
             cv.PutText(hsv_frame,"%s" % match_str,(10,40),self.font, (255,255,255))
             cv.PutText(hsv_frame,"%d %d %d" % (dot_value[0],dot_value[1],dot_value[2]),(10,60),self.font, (255,255,255))
-          cv.ShowImage(self.window_names["first"], self.first_frame)
+#          cv.ShowImage(self.window_names["first"], self.first_frame)
 #          cv.ShowImage(self.window_names["live"], frame)
           cv.ShowImage(self.window_names["difference"], hsv_frame)
 
