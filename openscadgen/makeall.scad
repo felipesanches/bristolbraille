@@ -13,19 +13,19 @@
 //build_slider_num=1;
 //build_comb=true;
 //build_slider_holders=true;
-//build_base=true;
+build_base=true;
 //build_lid=true;
-//build_sides=true; 
+build_sides=true; 
 //build_comb=true;
 //build_pin_slider=true;
 
 //optional extras
-build_solenoids=true;
-build_sliders=true; 
+//build_solenoids=true;
+//build_sliders=true; 
 build_rotors=true;
 build_rotor_rod=true;
 //build_pins=true;
-build_slider_rods=true;
+//build_slider_rods=true;
 include <globals.scad>;
 include <stepper.scad>;
 include <sliders.scad>;
@@ -140,7 +140,7 @@ module made_lid()
 {
   difference()
   {
-    translate([base_width/2-solenoid_width/2-edge_margin,base_y,base_z+base_height-thickness])
+    translate([side_separation/2-solenoid_width/2-edge_margin,base_y,base_z+base_height-thickness])
       base();
    made_slider_holder(1,false);
    made_slider_holder(2,false);
@@ -167,7 +167,7 @@ module made_side(num,boolean)
   {
     if(num==1)
     {
-        translate([base_x+base_width-thickness,base_y,base_z+base_height/2-thickness/2])
+        translate([base_x+side_separation-thickness,base_y,base_z+base_height/2-thickness/2])
           side();
     }
     if(num==2)
@@ -253,14 +253,14 @@ module made_slider_holder(num,boolean)
     if(num==1)
     {
         //most +ve y slider_holder
-        translate([-solenoid_width/2-edge_margin+base_width/2,rotor_rod_y+comb_length/2-thickness/2,base_z+base_height/2-thickness/2])
+        translate([-solenoid_width/2-edge_margin+side_separation/2,rotor_rod_y+comb_length/2-thickness/2,base_z+base_height/2-thickness/2])
           rotate([90,0,0])
             slider_holder();
     }
     else if(num==2)
     {
         //close to origin slider_holder
-        translate([-solenoid_width/2-edge_margin+base_width/2,rotor_rod_y-comb_length/2+thickness/2,base_z+base_height/2-thickness/2])
+        translate([-solenoid_width/2-edge_margin+side_separation/2,rotor_rod_y-comb_length/2+thickness/2,base_z+base_height/2-thickness/2])
           rotate([90,0,0])
             slider_holder();
     }
@@ -281,9 +281,12 @@ module made_slider_holder(num,boolean)
 stepper
 */
 
-*rotate([90,0,0])
+translate([side_separation+stepper_shaft_length,rotor_rod_y,rotor_rod_z])
 {
-    stepper();
-    translate([0,0,stepper_length/2+thickness/2])
-        stepper_mount();
+    rotate([90,0,-90])
+    {
+      stepper();
+      translate([0,0,stepper_length/2+thickness/2])
+          stepper_mount();
+    }
 }

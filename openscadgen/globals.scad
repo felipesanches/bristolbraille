@@ -1,5 +1,7 @@
 //defined
 //important stuff
+$fa=6;
+$fs=1;
 thickness=3.2; //material thickness
 pitch = 3.25; 
 y_pitch = 2.5;
@@ -47,8 +49,15 @@ slider_move_height=2;
 slider_lock_height=2.1;
 slider_pin_offset=plunger_hole_distance+slider_move_length; //distance we want the slider pin
 
+//stepper
+stepper_width=40;
+stepper_height=40;
+stepper_length=40;
+stepper_shaft_length=22;
+
 //base
-base_width=solenoid_total_x+2*edge_margin;
+base_width=solenoid_total_x+2*edge_margin+stepper_shaft_length+edge_margin/2;
+side_separation=solenoid_total_x+2*edge_margin;
 base_length=solenoid_total_y+2*edge_margin;
 base_height=solenoid_length+slider_height+min_spacing+slider_move_height+slider_solenoid_z_spacing+min_spacing+pin_length;
 pin_slider_move_height=2;
@@ -58,4 +67,4 @@ comb_width=num_solenoids*pitch+rotor_thickness+min_spacing*2;
 comb_length=solenoid_min_y_spacing;
 
 //pin slider
-pin_slider_width=base_width+thickness*2;
+pin_slider_width=side_separation+thickness*2;
