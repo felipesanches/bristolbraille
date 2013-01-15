@@ -13,13 +13,14 @@ class Target:
         self.first_frame_name = "firstframe.png"
         self.font = cv.InitFont(cv.CV_FONT_HERSHEY_SIMPLEX, 0.5, 1, 0, 2, 8)
         self.statefile = 'match_data.pkl'
-        self.threshold=150
         try:
           pkl_file = open(self.statefile, 'rb')
           self.match = pickle.load(pkl_file)
           self.matching = True; 
         except:
           self.matching = False; 
+          self.match["threshold"]=10
+          self.match["hue"]=50
 
         self.capture = cv2.VideoCapture(0) #.CaptureFromCAM(0)
         self.window_names = {
@@ -30,7 +31,7 @@ class Target:
         cv.NamedWindow(self.window_names["first"])
         cv.NamedWindow(self.window_names["difference"])
 #        cv.NamedWindow(self.window_names["live"])
-        cv.CreateTrackbar("thresh", self.window_names["first"], 0, 255, self.update_threshold)
+        cv.CreateTrackbar("thresh", self.window_names["first"], self.match["threshold"], 50, self.update_threshold)
         cv.SetMouseCallback(self.window_names["difference"], self.diff_mouse)
         cv.SetMouseCallback(self.window_names["first"], self.first_mouse)
 #        cv.SetMouseCallback(self.window_names["live"], self.live_mouse)
@@ -41,7 +42,7 @@ class Target:
           self.get_first_frame()
 
     def update_threshold(self,threshold):
-      self.threshold=threshold
+      self.match["threshold"]=threshold
       self.get_first_frame()
 
     def update_colour(self,colour):
@@ -57,7 +58,7 @@ class Target:
         first_frame = cv.CreateImage(frame_size, cv.IPL_DEPTH_8U, 3)
         #convert colour space, src, dst
         cv.CvtColor(frame, first_frame, cv.CV_BGR2HSV)
-        cv.Smooth(first_frame, first_frame, cv.CV_GAUSSIAN, 3, 0)
+#        cv.Smooth(first_frame, first_frame, cv.CV_GAUSSIAN, 3, 0)
 
 
         self.first_frame = first_frame
@@ -76,27 +77,29 @@ class Target:
       if event == cv.CV_EVENT_LBUTTONDOWN:
         self.match["top_corner"] = (x,y)
       if event == cv.CV_EVENT_LBUTTONUP:
-        self.matching = True;
-        self.match["dots"] = []
-        self.match["bottom_corner"] = (x,y)
+        #check area is big enough
+        if x > self.match["top_corner"][0] and y > self.match["top_corner"][1]:
+          self.matching = True;
+          self.match["dots"] = []
+          self.match["bottom_corner"] = (x,y)
 
-        match_width = abs(self.match["top_corner"][0] - self.match["bottom_corner"][0])
-        match_height = abs(self.match["top_corner"][1] - self.match["bottom_corner"][1])
-        print "matching to %d %d" % (match_width,match_height)
+          match_width = abs(self.match["top_corner"][0] - self.match["bottom_corner"][0])
+          match_height = abs(self.match["top_corner"][1] - self.match["bottom_corner"][1])
+          print "matching to %d %d" % (match_width,match_height)
 
-        #we have 3 dots and 2 spaces = 5
-        self.match["dot_width"] = int(match_width / 5)
-        self.match["dot_height"]= match_height
+          #we have 3 dots and 2 spaces = 5
+          self.match["dot_width"] = int(match_width / 5)
+          self.match["dot_height"]= match_height
 
-        first_dot = ( self.match["top_corner"][0], self.match["top_corner"][1] )
-        for dot_num in range(3):
-          dot = (first_dot[0]+dot_num*2*self.match["dot_width"],first_dot[1])
-          self.match["dots"].append(dot)
-        print self.match
-        output = open(self.statefile, 'wb')
-        # Pickle dictionary using protocol 0.
-        pickle.dump(self.match, output)
-        output.close()
+          first_dot = ( self.match["top_corner"][0], self.match["top_corner"][1] )
+          for dot_num in range(3):
+            dot = (first_dot[0]+dot_num*2*self.match["dot_width"],first_dot[1])
+            self.match["dots"].append(dot)
+          print self.match
+          output = open(self.statefile, 'wb')
+          # Pickle dictionary using protocol 0.
+          pickle.dump(self.match, output)
+          output.close()
 
     def run(self):
           #frame = cv.QueryFrame(self.capture)
@@ -108,7 +111,7 @@ class Target:
           hsv_frame = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 3)
           cv.CvtColor(frame, hsv_frame, cv.CV_BGR2HSV)
           #cv.Threshold(grey_frame, grey_frame, self.threshold, 255, cv.CV_THRESH_BINARY)
-          cv.Smooth(hsv_frame, hsv_frame, cv.CV_GAUSSIAN, 3, 0)
+#          cv.Smooth(hsv_frame, hsv_frame, cv.CV_GAUSSIAN, 3, 0)
           
          # difference = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 3)
          # cv.AbsDiff(hsv_frame, self.first_frame, difference)
@@ -134,11 +137,12 @@ class Target:
             self.dot_match = []
             match_str = ""
             for dot in dot_value:
-                dot_match =  True if abs(dot-self.match["hue"]) < 5 else False
+                dot_match =  True if abs(dot-self.match["hue"]) < self.match["threshold"] else False
                 self.dot_match.append(dot_match)
-                match_str += "True" if dot_match else "False"
+                match_str += "True " if dot_match else "False "
 
-            print match_str
+            if args.single:
+              print match_str
           #show images
             cv.PutText(hsv_frame,"%d" % self.match["hue"],(10,20),self.font, (255,255,255))
             cv.PutText(hsv_frame,"%s" % match_str,(10,40),self.font, (255,255,255))
