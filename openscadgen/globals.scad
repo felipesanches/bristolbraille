@@ -55,16 +55,31 @@ stepper_height=40;
 stepper_length=40;
 stepper_shaft_length=22;
 
-//base
-base_width=solenoid_total_x+2*edge_margin+stepper_shaft_length+edge_margin/2;
-side_separation=solenoid_total_x+2*edge_margin;
-base_length=solenoid_total_y+2*edge_margin;
-base_height=solenoid_length+slider_height+min_spacing+slider_move_height+slider_solenoid_z_spacing+min_spacing+pin_length;
-pin_slider_move_height=2;
+//sliders
+slider_z=solenoid_length/2+slider_height/2+slider_solenoid_z_spacing;
+slider_y=slider_length/2-solenoid_min_y_spacing+edge_margin;
+
 
 //comb
 comb_width=num_solenoids*pitch+rotor_thickness+min_spacing*2;
 comb_length=solenoid_min_y_spacing;
 
+//rotors
+rotor_rod_z=slider_z+slider_height/2+rotor_diameter/2+slider_move_height/2;
+rotor_rod_y=comb_length/2-thickness/2+solenoid_min_y_spacing;//solenoid_min_y_spacing*2; //slider_move_length+solenoid_total_y/2-solenoid_min_y_spacing;
+//base
+
+
+base_z=-solenoid_length/2+thickness/2;
+base_width=solenoid_total_x+2*edge_margin+stepper_shaft_length+edge_margin/2;
+side_separation=solenoid_total_x+2*edge_margin;
+base_length=solenoid_total_y+2*edge_margin;
+base_height=- base_z + rotor_rod_z + stepper_width / 2 +min_spacing + thickness; //solenoid_length+slider_height+min_spacing+slider_move_height+slider_solenoid_z_spacing+min_spacing+pin_length;
+
+base_y=base_length/2-edge_margin-solenoid_height;
+base_x=-solenoid_width/2-edge_margin+thickness/2;
+
 //pin slider
+pin_slider_move_height=2;
 pin_slider_width=side_separation+thickness*2;
+

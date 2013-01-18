@@ -12,9 +12,11 @@
 //export_slider_holder=true;
 //build_slider_num=1;
 //build_comb=true;
-//build_slider_holders=true;
+build_slider_holders=true;
+//build_stepper=true;
 build_base=true;
-//build_lid=true;
+build_lid=true;
+lid_camera_hole=true;
 build_sides=true; 
 //build_comb=true;
 //build_pin_slider=true;
@@ -42,8 +44,6 @@ echo(solenoid_min_y_spacing);
 /*************************************************************
 sliders and slider rods
 */
-slider_z=solenoid_length/2+slider_height/2+slider_solenoid_z_spacing;
-slider_y=slider_length/2-solenoid_min_y_spacing+edge_margin;
 if(build_sliders)
 {
     //render() //why?
@@ -69,8 +69,6 @@ module made_slider_rods()
 /*************************************************************
 rotors
 */
-rotor_rod_z=slider_z+slider_height/2+rotor_diameter/2+slider_move_height/2;
-rotor_rod_y=comb_length/2-thickness/2+solenoid_min_y_spacing;//solenoid_min_y_spacing*2; //slider_move_length+solenoid_total_y/2-solenoid_min_y_spacing;
 
 if(build_rotors)
 {
@@ -97,6 +95,12 @@ module made_pins()
   translate([0,rotor_rod_y,rotor_rod_z+rotor_diameter/2+pin_length/2])
     pins();
 }
+module made_camera_hole()
+{
+  translate([thickness,rotor_rod_y,base_height-thickness])
+   cube([side_separation-4*thickness,comb_length-4*thickness,thickness*4],center=true);
+ }
+  
 
 /*************************************************************
 solenoid
@@ -107,9 +111,6 @@ if(build_solenoids)
 /*************************************************************
 base
 */
-base_z=-solenoid_length/2+thickness/2;
-base_y=base_length/2-edge_margin-solenoid_height;
-base_x=-solenoid_width/2-edge_margin+thickness/2;
 if(build_base)
     made_base();
 if(export_base)
@@ -126,6 +127,7 @@ module made_base()
     made_slider_holder(2,false);
    made_side(1);
    made_side(2);
+   made_stepper();
   }
 }
 
@@ -140,13 +142,22 @@ module made_lid()
 {
   difference()
   {
-    translate([side_separation/2-solenoid_width/2-edge_margin,base_y,base_z+base_height-thickness])
+//    translate([base_width/2-solenoid_width/2-edge_margin,base_y,base_z])
+    translate([base_width/2-solenoid_width/2-edge_margin,base_y,base_z+base_height-thickness])
       base();
    made_slider_holder(1,false);
    made_slider_holder(2,false);
    made_side(1);
    made_side(2);
-   made_pins();
+   if(lid_camera_hole)
+   {
+    made_camera_hole();
+   }
+   else
+   {
+     made_pins();
+   }
+   made_stepper();
   }
 
 }
@@ -181,6 +192,7 @@ module made_side(num,boolean)
     made_slider_holder(2,false);
     made_slider_rods();
     made_rotor_rod();
+    /*
     union()
     {
     translate([pin_slider_x,pin_slider_y,pin_slider_z])
@@ -188,6 +200,7 @@ module made_side(num,boolean)
     translate([pin_slider_x,pin_slider_y,pin_slider_z+pin_slider_move_height])
       pin_slider();
     }
+    */
     }
   }
 }
@@ -239,9 +252,9 @@ if(export_slider_holder)
 }
 else if(build_slider_holders)
 {
-    render() //why?
+//    render() //why?
     made_slider_holder(1,true);
-    render() //why?
+ //   render() //why?
     made_slider_holder(2,true);
 }
 
@@ -281,12 +294,14 @@ module made_slider_holder(num,boolean)
 stepper
 */
 
-translate([side_separation+stepper_shaft_length,rotor_rod_y,rotor_rod_z])
+if(build_stepper)
+    made_stepper();
+module made_stepper()
 {
+translate([side_separation,base_y,base_z+base_height/2-thickness/2])
     rotate([90,0,-90])
-    {
+      stepper_mount();
+translate([side_separation+stepper_shaft_length,rotor_rod_y,rotor_rod_z])
+    rotate([90,0,-90])
       stepper();
-      translate([0,0,stepper_length/2+thickness/2])
-          stepper_mount();
-    }
 }

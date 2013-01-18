@@ -17,12 +17,16 @@ module bolt_holes()
   smooth=20;
   translate([-base_width/2+edge_margin/2,-base_length/2+edge_margin/2,0])
     cylinder(r=bolt_radius,h=2*base_height,center=true,$fn=smooth);
-  translate([+base_width/2-edge_margin/2,-base_length/2+edge_margin/2,0])
+*  translate([+base_width/2-edge_margin/2,-base_length/2+edge_margin/2,0])
     cylinder(r=bolt_radius,h=2*base_height,center=true,$fn=smooth);
 
   translate([-base_width/2+edge_margin/2,+base_length/2-edge_margin/2,0])
     cylinder(r=bolt_radius,h=2*base_height,center=true,$fn=smooth);
-  translate([+base_width/2-edge_margin/2,+base_length/2-edge_margin/2,0])
+*  translate([+base_width/2-edge_margin/2,+base_length/2-edge_margin/2,0])
+    cylinder(r=bolt_radius,h=2*base_height,center=true,$fn=smooth);
+  translate([+base_width/2-edge_margin/2,stepper_width / 2 + edge_margin,0])
+    cylinder(r=bolt_radius,h=2*base_height,center=true,$fn=smooth);
+  translate([+base_width/2-edge_margin/2,-stepper_width / 2 - edge_margin,0])
     cylinder(r=bolt_radius,h=2*base_height,center=true,$fn=smooth);
 }
 module side()
@@ -97,17 +101,17 @@ module slider_holder()
   
  difference()
  {
- cube([base_width+0.1,base_height+0.1,thickness],center=true);
+ cube([side_separation+0.1,base_height+0.1,thickness],center=true);
   //base locators
   translate([0,-base_height/2-0.1+thickness/2,0])
-    cube([base_width-edge_margin,thickness,thickness*2],center=true);
+    cube([side_separation-edge_margin,thickness,thickness*2],center=true);
   translate([0,+base_height/2+0.1-thickness/2,0])
-    cube([base_width-edge_margin,thickness,thickness*2],center=true);
+    cube([side_separation-edge_margin,thickness,thickness*2],center=true);
 
   //side locators
-  translate([-base_width/2-0.1+thickness/2,0,0])
+  translate([-side_separation/2-0.1+thickness/2,0,0])
     cube([thickness,edge_margin,thickness*2],center=true);
-  translate([+base_width/2+0.1-thickness/2,0,0])
+  translate([+side_separation/2+0.1-thickness/2,0,0])
     cube([thickness,edge_margin,thickness*2],center=true);
   }
 }

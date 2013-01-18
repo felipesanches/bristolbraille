@@ -27,16 +27,12 @@ module stepper()
 
 module stepper_mount()
 {
-    difference()
-    {
-        cube([stepper_length,stepper_width+2*thickness,thickness],center=true);    
-        translate([0,stepper_width/2+thickness/2,0])
-            cube([stepper_width/3,thickness,thickness],center=true);    
-        translate([0,-stepper_width/2-thickness/2,0])
-            cube([stepper_width/3,thickness,thickness],center=true);    
-        translate([0,0,-stepper_height/2-thickness/2])
-        stepper();
-
-    }
-
+        difference()
+        {
+          cube([stepper_length,base_height,thickness],center=true);    
+          translate([0,base_height/2-thickness/2,0])
+              cube([base_height/3,thickness,thickness],center=true);    
+          translate([0,-base_height/2+thickness/2,0])
+              cube([base_height/3,thickness,thickness],center=true);    
+        }
 }
