@@ -12,20 +12,23 @@
 //export_slider_holder=true;
 //build_slider_num=1;
 //build_comb=true;
-build_slider_holders=true;
+//build_slider_holders=true;
 //build_stepper=true;
-build_base=true;
-build_lid=true;
+//build_base=true;
+//build_lid=true;
 lid_camera_hole=true;
-build_sides=true; 
+export_side=true;
+//build_sides=true; 
 //build_comb=true;
+//export_base = true;
 //build_pin_slider=true;
-
+//build_stepper_mount=true;
+//export_stepper_mount = true;
 //optional extras
 //build_solenoids=true;
 //build_sliders=true; 
-build_rotors=true;
-build_rotor_rod=true;
+//build_rotors=true;
+//build_rotor_rod=true;
 //build_pins=true;
 //build_slider_rods=true;
 include <globals.scad>;
@@ -127,7 +130,7 @@ module made_base()
     made_slider_holder(2,false);
    made_side(1);
    made_side(2);
-   made_stepper();
+   made_stepper_mount();
   }
 }
 
@@ -172,6 +175,7 @@ if(build_sides)
 }
 if(export_side)
     projection()rotate([0,90,0])made_side(1,true);
+
 module made_side(num,boolean)
 {
   difference()
@@ -231,7 +235,7 @@ module made_pin_slider()
 comb
 */
 if(build_comb)
-    render()
+    //render()
     made_comb();
 if(export_comb)
     projection()made_comb();
@@ -294,14 +298,26 @@ module made_slider_holder(num,boolean)
 stepper
 */
 
-if(build_stepper)
-    made_stepper();
+if(export_stepper_mount)
+    projection()rotate([0,90,0])made_stepper_mount();
+if(build_stepper_mount)
+{
+//    made_stepper();
+    made_stepper_mount();
+}
 module made_stepper()
 {
-translate([side_separation,base_y,base_z+base_height/2-thickness/2])
-    rotate([90,0,-90])
-      stepper_mount();
 translate([side_separation+stepper_shaft_length,rotor_rod_y,rotor_rod_z])
     rotate([90,0,-90])
       stepper();
+}
+module made_stepper_mount()
+{
+//difference()
+//{
+  translate([side_separation,base_y,base_z+base_height/2-thickness/2])
+      rotate([90,0,-90])
+        stepper_mount();
+//      made_stepper();
+ //     }
 }
