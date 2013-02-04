@@ -1,4 +1,4 @@
-#manual
+#works well at about 6cm
 rm -f capt0000.jpg
 aperture=9 # max aperture for max focal length
 shootmode=2 #aperture priority
