@@ -3,6 +3,14 @@ from PIL import Image, ImageDraw
 import argparse
 import colorsys
 import sys
+import pickle
+state_file = 'coords'
+
+def get_coords():
+    f=open(state_file)
+    
+    (left, upper, right, lower) =pickle.load(f)
+    return (left,upper,right,lower)
 
 def get_main_color(img):
     colors = img.getcolors(img.size[0]*img.size[1])
@@ -36,20 +44,28 @@ def get_region_box(img,region_num):
   #box = (region_w*region_num,y/2,region_w*region_num+region_w,y)
   return box
 
+def get_zoom(img,box):
+  region = img.crop(box)
+  return region
+
 def get_region(img,region_num):
   region = img.crop(get_region_box(img,region_num))
   region.save("region%d.jpg" % (region_num))
   return region
 
 def analyse():
+  box=get_coords() 
   im = Image.open(args.file)
+  im = get_zoom(im,box)
+  im = im.rotate(90)
+  #im.save("zoom.jpg")
   """
   r,g,b = get_main_color(im)
   h,s,v= colorsys.rgb_to_hsv(r/float(255),g/float(255),b/float(255))
   print h
   return
   """
-
+  matches = [None,None,None] 
   for i in range(args.num_regions):
     region = get_region(im,i)
 
@@ -58,15 +74,19 @@ def analyse():
     if args.debug:
       print >> sys.stderr, "%i: %.2fh" % (i,h)
     if h > args.hue_match:
+      matches[i]=True
       print 1,
     else :
+      matches[i]=False
       print 0,
-  
+ 
+  print ""
   for i in range(args.num_regions):
     draw_region(im, get_region_box(im,i))
   im.save("regions.jpg")
+  return matches
 
-if __name__=="__main__":
+def get_args():
   argparser = argparse.ArgumentParser()
 
 #  group = argparser.add_mutually_exclusive_group(required=True)
@@ -83,10 +103,14 @@ if __name__=="__main__":
       action='store_const', const=True, dest='debug', default=False,
       help="debug")
   argparser.add_argument('--file',
-      action='store', dest='file', default=None, required=True,
+      action='store', dest='file', default='capt0000.jpg',
       help="load an image")
       
-  args = argparser.parse_args()
+  return argparser.parse_args()
+
+if __name__=="__main__":
+
+  args = get_args()
   analyse()
   
 

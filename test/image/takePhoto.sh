@@ -6,4 +6,5 @@ gphoto2 --set-config /main/capturesettings/shootingmode=$shootmode \
 	--set-config /main/capturesettings/aperture=$aperture \
 	--set-config /main/capturesettings/focusingpoint=0 \
 	--set-config /main/capturesettings/afdistance=1 \
-	--capture-image-and-download
+	--capture-image-and-download \
+    --quiet
