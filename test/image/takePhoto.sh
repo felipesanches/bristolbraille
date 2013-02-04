@@ -1,6 +1,9 @@
 #manual
-rm -f IMG_0003.JPG
-shutter=25
-aperture=4
-echo shootmode
-gphoto2 --set-config /main/capturesettings/shootingmode=3 --set-config /main/capturesettings/shutterspeed=$shutter --set-config /main/capturesettings/aperture=$aperture --set-config /main/capturesettings/focusingpoint=0 --set-config /main/capturesettings/afdistance=1 --capture-image #-and-download
+rm -f capt0000.jpg
+aperture=9 # max aperture for max focal length
+shootmode=2 #aperture priority
+gphoto2 --set-config /main/capturesettings/shootingmode=$shootmode \
+	--set-config /main/capturesettings/aperture=$aperture \
+	--set-config /main/capturesettings/focusingpoint=0 \
+	--set-config /main/capturesettings/afdistance=1 \
+	--capture-image-and-download
