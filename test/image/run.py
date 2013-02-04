@@ -19,7 +19,7 @@ feed.args = feed.get_args()
 feed.serial_port = feed.setup_serial()
 
 log_file = 'log.txt'
-log = open(log_file,'w')
+log = open(log_file,'w', 1) #line buffered
 
 #how much we rotate by
 r = 200/8;
