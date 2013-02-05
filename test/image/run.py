@@ -1,17 +1,21 @@
+#!/usr/bin/env python
 import feed
+import time
 import analyse
 import os
 import datetime
 
+ensure_unlock = False
+
 sequences = [ #black is true, white is false
     [False,False,False],
-    [True,False,False],
-    [True,True,False],
-    [True,True,True],
-    [False,True,True],
-    [True,False,True],
-    [False,True,False],
     [False,False,True],
+    [False,True,False],
+    [True,False,True],
+    [False,True,True],
+    [True,True,True],
+    [True,True,False],
+    [True,False,False],
     ]
 
 #set up arduino feeder
@@ -22,30 +26,42 @@ log_file = 'log.txt'
 log = open(log_file,'w', 1) #line buffered
 
 #how much we rotate by
-r = 200/8;
-codes=['f%d' %r]
+one_step = 200/8
+#steps to go back after moving to the right pos
+correction = -6
 
 log.write("started\n")
+log.write("pos, date, expected, got, pass/fail\n")
 
-while True:
-    for i in range(8):
+#while True:
+for i in range(8):
+    response = feed.send_robot_commands(["s%d,0,0" % i])
+    response = feed.send_robot_commands(["f%d" % correction])
 
-        s = "rotor pos %d, time %s : " % (i, datetime.datetime.now())
-        print s,
-        log.write(s)
+    #take photo
+    os.system("./takePhoto.sh")
 
-        #take photo
-        os.system("./takePhoto.sh")
+    #analyse photo
+    analyse.args = analyse.get_args()
+    matches = analyse.analyse()
 
-        #analyse photo
-        analyse.args = analyse.get_args()
-        matches = analyse.analyse()
-        if matches == sequences[i]:
-            print "pass"
-            log.write("pass\n")
-        else:
-            print "fail"
-            log.write("fail\n")
+    result = False
+    if matches == sequences[i]:
+        result = True;
 
-        #turn motor
-        response = feed.send_robot_commands(codes)
+    if ensure_unlock:
+        #turn back motor to ensure stopper is back
+        print "unlock slider back"
+        response = feed.send_robot_commands(["f%d" % -50])
+        print "unlock slider forward"
+        response = feed.send_robot_commands(["f%d" % 50])
+
+    #reset the rotor by going back the same amount we shoudl have gone forward
+
+    log.write( "%d, %s, %s, %s, %s\n" % (i, datetime.datetime.now(),sequences[i],matches,result))
+#    os.system("eog regions.jpg");
+
+    print "reset"
+    codes = ["f%d" % (-one_step * i)]
+    response = feed.send_robot_commands(codes)
+

@@ -4,6 +4,8 @@ pygame.init()
 import pickle
 
 state_file = 'coords'
+crop = 200
+offset=400
 
 def displayImage(screen, px, topleft, prior):
     # ensure that the rect always has positive width, height
@@ -37,14 +39,19 @@ def displayImage(screen, px, topleft, prior):
     return (x, y, width, height)
 
 def setup(path):
-    px = pygame.image.load(path)
+    img = Image.open(input_loc)
+    (x,y)=img.size
+    img = img.crop(( x/2-crop,y/2-crop+offset,x/2+crop,y/2+crop+offset))
+    crop_loc="cropped.jpg"
+    img.save(crop_loc)
+    px = pygame.image.load(crop_loc)
     print px.get_rect()
     (width,height) = px.get_rect()[2:]
-    bg = pygame.transform.scale(px, (width/2,height/2))
-    screen = pygame.display.set_mode( bg.get_rect()[2:] )
-    screen.blit(bg, bg.get_rect())
+    #bg = pygame.transform.scale(px, (width/scaling,height/scaling))
+    screen = pygame.display.set_mode( px.get_rect()[2:] )
+    screen.blit(px, px.get_rect())
     pygame.display.flip()
-    return screen, bg
+    return screen, px, (x,y)
 
 def mainLoop(screen, px):
 
@@ -65,10 +72,16 @@ def mainLoop(screen, px):
 if __name__ == "__main__":
     input_loc = 'capt0000.jpg'
     output_loc = 'out.png'
-    screen, px = setup(input_loc)
+    screen, px, (x,y) = setup(input_loc)
+    print px
     dim = mainLoop(screen, px)
     f=open(state_file,'w')
-    pickle.dump([2*s for s in dim],f)
+    new_dim = [ dim[0]+x/2-crop,
+        dim[1]+y/2-crop+offset,
+        dim[2]+x/2-crop,
+        dim[3]+y/2-crop+offset, ]
+    print new_dim
+    pickle.dump(new_dim,f)
     """
     # ensure output rect always has positive width, height
     if right < left:

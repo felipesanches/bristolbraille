@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from PIL import Image, ImageDraw
 import argparse
 import colorsys
@@ -57,7 +57,7 @@ def analyse():
   box=get_coords() 
   im = Image.open(args.file)
   im = get_zoom(im,box)
-  im = im.rotate(90)
+  im = im.rotate(-90)
   #im.save("zoom.jpg")
   """
   r,g,b = get_main_color(im)

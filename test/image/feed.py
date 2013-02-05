@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import sys
 import string
 import argparse
@@ -15,8 +15,6 @@ def setup_serial():
     serial_port.timeout=args.timeout
     serial_port.baudrate=args.baud
     serial_port.open()
-    #get rid of start message
-    response = serial_port.readline()
   except IOError, e:
     print "robot not connected?", e
     exit(1)
@@ -77,8 +75,6 @@ if __name__ == '__main__':
       exit(1)
 
     serial_port = setup_serial()
-    #get rid of the started blurb
-    response = serial_port.readline()
 
     response = send_robot_commands(codes)
     print response
