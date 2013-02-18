@@ -4,7 +4,7 @@ pygame.init()
 import pickle
 
 state_file = 'coords'
-crop = 200
+crop = 400
 offset=400
 
 def displayImage(screen, px, topleft, prior):
