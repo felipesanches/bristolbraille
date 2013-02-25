@@ -34,7 +34,7 @@ def get_region_box(img,region_num):
 
   box = (
     int(band_w*region_num+region_offset),
-    y/2,
+    0, #y/2,
     int(band_w*region_num+region_offset+region_w),
     y)
   if args.debug:

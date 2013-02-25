@@ -32,36 +32,40 @@ correction = -6
 
 log.write("started\n")
 log.write("pos, date, expected, got, pass/fail\n")
+failures = 0
+while failures < 10:
+    for i in range(8):
+        response = feed.send_robot_commands(["s%d,0,0" % i])
+        response = feed.send_robot_commands(["f%d" % correction])
 
-#while True:
-for i in range(8):
-    response = feed.send_robot_commands(["s%d,0,0" % i])
-    response = feed.send_robot_commands(["f%d" % correction])
+        #take photo
+        os.system("./takePhoto.sh")
 
-    #take photo
-    os.system("./takePhoto.sh")
+        #analyse photo
+        analyse.args = analyse.get_args()
+        matches = analyse.analyse()
 
-    #analyse photo
-    analyse.args = analyse.get_args()
-    matches = analyse.analyse()
+        result = False
+        if matches == sequences[i]:
+            result = True;
+        else:
+            failures += 1
 
-    result = False
-    if matches == sequences[i]:
-        result = True;
+        print "result: ", result
 
-    if ensure_unlock:
-        #turn back motor to ensure stopper is back
-        print "unlock slider back"
-        response = feed.send_robot_commands(["f%d" % -50])
-        print "unlock slider forward"
-        response = feed.send_robot_commands(["f%d" % 50])
+        if ensure_unlock:
+            #turn back motor to ensure stopper is back
+            print "unlock slider back"
+            response = feed.send_robot_commands(["f%d" % -50])
+            print "unlock slider forward"
+            response = feed.send_robot_commands(["f%d" % 50])
 
-    #reset the rotor by going back the same amount we shoudl have gone forward
+        #reset the rotor by going back the same amount we shoudl have gone forward
 
-    log.write( "%d, %s, %s, %s, %s\n" % (i, datetime.datetime.now(),sequences[i],matches,result))
-#    os.system("eog regions.jpg");
+        log.write( "%d, %s, %s, %s, %s\n" % (i, datetime.datetime.now(),sequences[i],matches,result))
+    #    os.system("eog regions.jpg");
 
-    print "reset"
-    codes = ["f%d" % (-one_step * i)]
-    response = feed.send_robot_commands(codes)
+        print "reset"
+        codes = ["f%d" % (-one_step * i)]
+        response = feed.send_robot_commands(codes)
 
