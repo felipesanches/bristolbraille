@@ -1,16 +1,20 @@
 include <globals.scad>;
 use <cam.scad>;
-
+/*
+todo:
+  -guide needs to fit slider really accurately to ensure non-wobbly rise
+  bit is cutting slightly wide, reduce bit width to 1.9mm
+  +cam is too hard to turn, increase slope time from 40 to 50
 cam_r = 10;
 min_cam_r = 5;
-
+*/
 
 slider_width = 50;
 slider_height = 30;
 slot_dist = 30;
 slot_length=5;
 base_height = 40;
-//display = true;
+display = true;
 cam_y = (base_height-slider_height)/2;
 if(display)
 {
@@ -27,7 +31,7 @@ if(display)
 //projection()draw_cam(center_r=spindle_radius);
 //projection()made_slider();
 //projection()made_backplate();
-projection()made_guide();
+//projection()made_guide();
 module bolts(r=spindle_radius)
 {
   translate([-slot_dist/2,0,0])
