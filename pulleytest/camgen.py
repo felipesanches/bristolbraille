@@ -2,7 +2,8 @@
 import math
 
 #define the movement we want from the cam
-control_points = [[0,5],[140,10],[350,10],[359,5]]
+slope = 50
+control_points = [[0,5],[slope,10],[359-slope,10],[359,5]]
 #how many degrees to increment each time, smaller number makes the cam smoother
 deg_inc = 1 
 
@@ -30,7 +31,7 @@ for point in points:
 f = open("cam.scad",'w')
 f.write( """$fs=1;
 draw_cam();
-module draw_cam(thickness=1,center_r=3)
+module draw_cam(thickness=2,center_r=2)
 {
   difference()
   {
