@@ -28,19 +28,22 @@ for point in points:
   #print "%3d, x %2.2f y %2.2f" % (point[0], x, y)
 
 #finally, format for openscad
+
+polygon_points_string = ",\n            ".join(["[%2.2f,%2.2f]" % (p[0], p[1]) for p in poly_points])
 f = open("cam.scad",'w')
 f.write( """$fs=1;
 draw_cam();
 module draw_cam(thickness=2,center_r=2)
 {
-  difference()
+  points = [%s];
+  linear_extrude(height=thickness)
   {
-    linear_extrude(height=thickness) 
-      polygon([""" )
-for point in poly_points:
-  f.write( "[%2.2f,%2.2f],\n" % (point[0], point[1]) )
-f.write("""]);
-    cylinder(r=center_r,h=3*thickness,center=true);
+    difference()
+    {
+      polygon(points);
+      circle(r=center_r,center=true);
+    }
   }
-}""")
-f.close
+}""" % (polygon_points_string))
+f.close()
+
